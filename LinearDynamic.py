@@ -260,7 +260,10 @@ def perm( Q_T: np.array, A: np.array) -> np.array:
 
     return Z
 
-
+def remove_zero_cols(x):
+    idx = np.argwhere(np.all(np.isclose(x[...,:], 0), axis=0))
+    x = np.delete(x,idx,axis=1)
+    return x
 
 def perm_general(Q_T, A, t, n):
     # Q_T rows tells us if any rows are lost.
