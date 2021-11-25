@@ -10,8 +10,9 @@ def q(theta, y, x):
 
     Returns
         (N,) vector. 
+        
     '''
-    return (-1)*loglikelihood(theta, y, x)
+    return (-1)*loglikelihood(theta, y, x) / y.shape[0]
 
 def starting_values(y, x): 
     '''starting_values(): returns a "reasonable" vector of parameters from which to start estimation
@@ -40,8 +41,6 @@ def util(theta, x, MAXRESCALE:bool=True):
     v = x @ theta
 
     if MAXRESCALE:
-        # subtract the row-max from each observation
-        # keepdims maintains the second dimension, (N,1), so broadcasting is successful
         v -= v.max(axis=1, keepdims=True)
     
     return v 
@@ -62,18 +61,18 @@ def loglikelihood(theta, y, x):
     # deterministic utility 
     v = util(theta, x, MAXRESCALE=True)
 
-    # denominator 
-    denom = np.exp(v).sum(axis=1)
-    assert denom.ndim == 1 # make sure denom is 1-dimensional so that we can subtract it later 
-
     # utility at chosen alternative 
-    v_i = v[np.arange(N), y]
-
+    v = np.fmax(v, 1e-8)    # truncate below at 0.00000001 
+    v = np.fmin(v, 1.-1e-8) # truncate above at 0.99999999
+        
+    score = np.exp(v) / np.sum(np.exp(v), 1, keepdims=True)
+    
     # likelihood 
-    ll_i = v_i - np.log(denom)
+    ll_i = np.sum(y*np.log(score), axis=1)
+
     assert ll_i.ndim == 1 # we should return an (N,) vector 
 
-    return ll_i 
+    return ll_i
 
 
 def choice_prob(theta, x):
