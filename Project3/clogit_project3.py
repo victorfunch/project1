@@ -12,7 +12,7 @@ def q(theta, y, x):
         (N,) vector. 
         
     '''
-    return (-1)*loglikelihood(theta, y, x) / y.shape[0]
+    return (-1)*(loglikelihood(theta, y, x))
 
 def starting_values(y, x): 
     '''starting_values(): returns a "reasonable" vector of parameters from which to start estimation
@@ -60,15 +60,14 @@ def loglikelihood(theta, y, x):
 
     # deterministic utility 
     v = util(theta, x, MAXRESCALE=True)
-
-    # utility at chosen alternative 
-    v = np.fmax(v, 1e-8)    # truncate below at 0.00000001 
-    v = np.fmin(v, 1.-1e-8) # truncate above at 0.99999999
         
-    score = np.exp(v) / np.sum(np.exp(v), 1, keepdims=True)
+    s = np.exp(v) / np.sum(np.exp(v), axis=1, keepdims=True)
+    
+    s = np.fmax(s, 1e-8)    # truncate below at 0.00000001 
+    s = np.fmin(s, 1.-1e-8) # truncate above at 0.99999999
     
     # likelihood 
-    ll_i = np.sum(y*np.log(score), axis=1)
+    ll_i = np.sum(y*np.log(s), axis=1)
 
     assert ll_i.ndim == 1 # we should return an (N,) vector 
 
